@@ -1,7 +1,6 @@
-# Simulador de cache feito na linguagem de programação Odin 
+# Simulador de cache feito em Python
 
-- Rodar : odin run . -- \<nsets\> \<bsize\> \<assoc\> \<substituição\> \<flag_saida\> arquivo_de_entrada
-- Build : odin build . 
+- Rodar : python main.py \<nsets\> \<bsize\> \<assoc\> \<substituição\> \<flag_saida\> arquivo_de_entrada
 
 # Feito por : 
 - Igor Basilio
