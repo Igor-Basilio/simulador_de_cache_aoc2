@@ -21,7 +21,6 @@ import os
 import sys
 import math
 
-tam_mem_principal = 0
 nsets = 0
 bsize = 0
 assoc = 0
@@ -41,7 +40,9 @@ misses = 0
 misses_compulsorios = 0
 
 def main():
+
     global nsets, bsize, assoc, subs, flag_saida, acessos
+    global hits,  acessos, misses, misses_compulsorios
 
     args = sys.argv[1:]
     if len(args) != 6:
@@ -90,8 +91,8 @@ def main():
         print("Flag de saída deve ser 0 ou 1.")
         sys.exit(1)
 
-    cache_tag = [nsets * assoc]
-    cache_val = [nsets * assoc]
+    cache_tag = [0] * (nsets * assoc)
+    cache_val = [0] * (nsets * assoc)
     n_bits_offset = math.log(bsize, 2)
     n_bits_indice = math.log(nsets, 2)
 
@@ -104,8 +105,8 @@ def main():
                 if bytes_read == 0:
                     break
                 address = (address_bytes[0] << 24) | (address_bytes[1] << 16) | (address_bytes[2] << 8) | address_bytes[3]
-                tag = address >> (n_bits_offset + n_bits_indice)
-                indice = (address >> n_bits_offset) & math.exp(n_bits_indice - 1, 2)
+                tag = address >> int(n_bits_offset + n_bits_indice)
+                indice = (address >> int(n_bits_offset)) & int(n_bits_indice**2 - 1)
 
                 if cache_val[indice] == 0:
                     misses_compulsorios += 1
@@ -116,16 +117,24 @@ def main():
                         hits += 1
                     else:
                         misses += 1
-                        cache_val[indice] = 1
                         cache_tag[indice] = tag
 
                 acessos += 1
+
+        if flag_saida == 1:
+            print(
+                str(acessos) + " " +
+                str(hits/acessos) + " " +
+                str(misses/acessos) + " " +
+                str(misses_compulsorios/acessos) + " "
+            )
+        else:
+            print(" idk ")
 
     except FileNotFoundError:
         print("Não foi possível ler o arquivo de entrada.")
         sys.exit(1)
 
-    print(acessos)
 
 if __name__ == "__main__":
     main()
