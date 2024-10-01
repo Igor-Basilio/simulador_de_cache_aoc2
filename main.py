@@ -93,10 +93,20 @@ def main():
         print("Flag de saída deve ser 0 ou 1.")
         sys.exit(1)
 
-    cache_tag = [0] * (nsets * assoc)
+    #class partition():
+
+    #   def __init__(self, assoc):
+    #       self.assoc = assoc
+    #        self.tag = [0] * assoc
+    #        self.val = [0] * assoc
+
+    #cache_ = [partition(assoc) for _ in range(nsets)]
+
     cache_val = [0] * (nsets * assoc)
-    n_bits_offset = int(math.log(bsize, 2)) # 4   -> 2
-    n_bits_indice = int(math.log(nsets, 2)) # 256 -> 8
+    cache_tag = [0] * (nsets * assoc)
+
+    n_bits_offset = int(math.log(bsize, 2))
+    n_bits_indice = int(math.log(nsets, 2))
 
     try:
 
@@ -109,7 +119,7 @@ def main():
 
                 address = (address_bytes[0] << 24) | (address_bytes[1] << 16) | (address_bytes[2] << 8) | address_bytes[3]
                 tag = address >> (n_bits_offset + n_bits_indice)
-                indice = ( address >> n_bits_offset ) & ( n_bits_indice ** 2 - 1 )
+                indice = (address >> n_bits_offset) & ((2 ** n_bits_indice) - 1)
 
                 print(f"address: {address}, tag: {tag}, indice: {indice}")
                 print(f"cache_tag[indice]: {cache_tag[indice]}, cache_val[indice]: {cache_val[indice]}")
@@ -125,30 +135,39 @@ def main():
                         else:
                             misses_conflito += 1
                             cache_tag[indice] = tag
-                else:
-                    found = False
-                    for i in range(indice, indice + assoc):
-                        if cache_tag[i] == tag:
-                            if cache_val[i] == 1:
-                                found = True
-                                hits += 1
-                                break
+               # else:
+               #    if cache_val[indice] == 0:
 
-                    if not found:
-                        empty_found = False
-                        for i in range(indice, indice + assoc):
-                            if cache_val[i] == 0:
-                                cache_val[i] = 1
-                                cache_tag[i] = tag
-                                empty_found = True
-                                misses_compulsorios += 1
-                                break
+               #    else:
+                       #
+                   # found = False
+                   # for part in cache_:
+                   #     for i in range(assoc):
+                   #         if part.tag[i] == tag:
+                   #             if part.val[i] == 1:
+                   #                 found = True
+                   #                 hits += 1
+                   #                 break
 
-                        if not empty_found:
-                            idx = random.randint(indice, indice + assoc - 1) 
-                            cache_val[idx] = 1
-                            cache_tag[idx] = tag
-                            misses_conflito += 1
+                   # if not found:
+                   #     empty_found = False
+                   #     for p in cache_:
+                   #         for i in range(assoc):
+                   #             if p.val[i] == 0:
+                   #                 p.val[i] = 1
+                   #                 p.tag[i] = tag
+                   #                 empty_found = True
+                   #                 misses_compulsorios += 1
+                   #                 break
+                   #         if empty_found:
+                   #             break
+
+                   #     if not empty_found:
+                   #         part = random.choice(cache_)
+                   #         idx = random.randint(0, assoc - 1)
+                   #         part.val[idx] = 1
+                   #         part.tag[idx] = tag
+                   #         misses_conflito += 1
 
                 acessos += 1
 
