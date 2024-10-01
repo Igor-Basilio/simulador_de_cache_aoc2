@@ -93,15 +93,6 @@ def main():
         print("Flag de saída deve ser 0 ou 1.")
         sys.exit(1)
 
-    #class partition():
-
-    #   def __init__(self, assoc):
-    #       self.assoc = assoc
-    #        self.tag = [0] * assoc
-    #        self.val = [0] * assoc
-
-    #cache_ = [partition(assoc) for _ in range(nsets)]
-
     cache_val = [0] * (nsets * assoc)
     cache_tag = [0] * (nsets * assoc)
 
@@ -135,51 +126,48 @@ def main():
                         else:
                             misses_conflito += 1
                             cache_tag[indice] = tag
-               # else:
-               #    if cache_val[indice] == 0:
+                else:
+                    # Não é necessário a parte de mapeamento direto
+                    # acima mas como eu já tinha feito vou deixar assim
+                    # essa segunda parte engloba o mapeamento direto.
+                    hit = False
+                    for i in range(assoc):
+                        idx = indice + i * nsets
+                        if cache_val[idx] == 1:
+                            if cache_tag[idx] == tag:
+                                hits += 1
+                                hit = True
+                                break
 
-               #    else:
-                       #
-                   # found = False
-                   # for part in cache_:
-                   #     for i in range(assoc):
-                   #         if part.tag[i] == tag:
-                   #             if part.val[i] == 1:
-                   #                 found = True
-                   #                 hits += 1
-                   #                 break
+                    if not hit:
+                        if subs == Algoritmo.R:
+                            idx = random.randint(0, assoc - 1)
 
-                   # if not found:
-                   #     empty_found = False
-                   #     for p in cache_:
-                   #         for i in range(assoc):
-                   #             if p.val[i] == 0:
-                   #                 p.val[i] = 1
-                   #                 p.tag[i] = tag
-                   #                 empty_found = True
-                   #                 misses_compulsorios += 1
-                   #                 break
-                   #         if empty_found:
-                   #             break
+                            if cache_val[indice + idx * nsets] == 0:
+                                misses_compulsorios += 1
+                            else:
+                                # miss de conflito ? capacidade ?
+                                # não sei qual a diferença de capacidade para 
+                                # conflito em conjunto associativa ?
+                                misses_capacidade += 1
 
-                   #     if not empty_found:
-                   #         part = random.choice(cache_)
-                   #         idx = random.randint(0, assoc - 1)
-                   #         part.val[idx] = 1
-                   #         part.tag[idx] = tag
-                   #         misses_conflito += 1
+                            cache_val[indice + idx * nsets] = 1
+                            cache_tag[indice + idx * nsets] = tag
+                        ## fazer os outros algoritmos
+                        ## elif subs == Algoritmo.LRU ... 
+                        ## else ... Algoritmo.FIFO
 
                 acessos += 1
 
         if flag_saida == 1:
             print(
                 str(acessos) + " " +
-                str(hits/acessos) + " " +
-                str((misses_capacidade + misses_conflito + misses_compulsorios)/acessos) + " " +
-                str(misses_compulsorios/(misses_capacidade + misses_conflito + misses_compulsorios)) + " " +
-                str(misses_capacidade/(misses_capacidade + misses_conflito + misses_compulsorios)) + " " +
-                str(misses_conflito/(misses_capacidade + misses_conflito + misses_compulsorios))
-            )
+                format(hits/acessos, '.4f') + " " +
+                format((misses_capacidade + misses_conflito + misses_compulsorios)/acessos, '.4f') + " " +
+                format(misses_compulsorios/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + " " +
+                format(misses_capacidade/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + " " +
+                format(misses_conflito/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + " "
+                )
         else:
             print(" idk ")
 
