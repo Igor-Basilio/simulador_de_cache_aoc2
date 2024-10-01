@@ -112,9 +112,6 @@ def main():
                 tag = address >> (n_bits_offset + n_bits_indice)
                 indice = (address >> n_bits_offset) & ((2 ** n_bits_indice) - 1)
 
-                print(f"address: {address}, tag: {tag}, indice: {indice}")
-                print(f"cache_tag[indice]: {cache_tag[indice]}, cache_val[indice]: {cache_val[indice]}")
-
                 if assoc == 1:
                     if cache_val[indice] == 0:
                         misses_compulsorios += 1
@@ -141,18 +138,23 @@ def main():
 
                     if not hit:
                         if subs == Algoritmo.R:
+
                             idx = random.randint(0, assoc - 1)
+
+                            count = 0
+                            for i in range(assoc):
+                                count += cache_val[indice + i*nsets]
 
                             if cache_val[indice + idx * nsets] == 0:
                                 misses_compulsorios += 1
-                            else:
-                                # miss de conflito ? capacidade ?
-                                # não sei qual a diferença de capacidade para 
-                                # conflito em conjunto associativa ?
+                            elif count == assoc:
                                 misses_capacidade += 1
+                            else:
+                                misses_conflito += 1
 
                             cache_val[indice + idx * nsets] = 1
                             cache_tag[indice + idx * nsets] = tag
+
                         ## fazer os outros algoritmos
                         ## elif subs == Algoritmo.LRU ... 
                         ## else ... Algoritmo.FIFO
@@ -169,8 +171,34 @@ def main():
                 format(misses_conflito/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + " "
                 )
         else:
-            print(" idk ")
-
+            print("""
+# ===================================================================================
+#                             Simulador de Cache
+# ===================================================================================
+#                        __====-_  _-====
+#                  _--^^^#####//      \\\\#####^^^--_
+#               _-^##########// (    ) \\\\##########^-_
+#              -############//  |\\^^/|  \\\\############-
+#            _/############//   (@::@)   \\\\############\\_
+#           /#############((     \\\\//     ))#############\\
+#          -###############\\\\    (oo)    //###############-
+#         -#################\\\\  / `' \\  //#################-
+#        -###################\\\\/  (|)  \\\\//###################-
+#       _#/|##########/\\######(   / | \\   )######/\\##########|\\#_
+#       |/ |#/\\#/\\#/\\/  \\#/\\#/\\ (  | |  ) /\\#/\\#/\\  \\/\\/\\#/\\| \\|
+#       |/  |/  \\|/  |/     |/  |/  |/   |/     |/  |/  |/  |/  \\|/
+#
+# Authors: Igor Basilio & Lucas Bayer
+# ===================================================================================
+            """)
+            print(
+                "Acessos : " + str(acessos) + "\n" +
+                "Taxa de hit : " + format(hits/acessos, '.4f') + "\n" +
+                "Taxa de misses : " + format((misses_capacidade + misses_conflito + misses_compulsorios)/acessos, '.4f') + "\n" +
+                "Taxa de misses compulsorios : " + format(misses_compulsorios/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "\n" +
+                "Taxa de misses de capacidade : " + format(misses_capacidade/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "\n" +
+                "Taxa de misses de conflito : " + format(misses_conflito/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "\n"
+                )
     except FileNotFoundError:
         print("Não foi possível ler o arquivo de entrada.")
         sys.exit(1)
