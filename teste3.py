@@ -1,22 +1,3 @@
-# ===================================================================================
-#                             Simulador de Cache
-# ===================================================================================
-#                        __====-_  _-====
-#                  _--^^^#####//      \\#####^^^--_
-#               _-^##########// (    ) \\##########^-_
-#              -############//  |\^^/|  \\############-
-#            _/############//   (@::@)   \\############\_
-#           /#############((     \\//     ))#############\
-#          -###############\\    (oo)    //###############-
-#         -#################\\  / `' \  //#################-
-#        -###################\\/  (|)  \//###################-
-#       _#/|##########/\######(   / | \   )######/\##########|\#_
-#       |/ |#/\#/\#/\/  \#/\#/\ (  | |  ) /\#/\#/\  \/\/\#/\| \|
-#       |/  |/  \|/  |/     |/  |/  |/   |/     |/  |/  |/  |/  \|/
-#
-# Authors: Igor Basilio & Lucas Bayer
-# ===================================================================================
-
 import sys
 import math
 import random
@@ -46,78 +27,53 @@ def main():
     global hits,  acessos, misses, misses_compulsorios
     global misses_conflito, misses_capacidade
 
-    args = sys.argv[1:]
-    if len(args) != 6:
-        print("Uso :\nsimulador_cache <nsets> <bsize> <assoc> <substituição> <flag_saida> arquivo_de_entrada")
-        sys.exit(1)
 
-    try:
-        nsets = int(args[0])
-    except ValueError:
-        print("Número de conjuntos inválido.")
-        sys.exit(1)
 
-    try:
-        bsize = int(args[1])
-    except ValueError:
-        print("Tamanho do bloco inválido.")
-        sys.exit(1)
-
-    try:
-        assoc = int(args[2])
-    except ValueError:
-        print("Associatividade inválida.")
-        sys.exit(1)
-
-    if args[3] == "R":
-        subs = Algoritmo.R
-    elif args[3] == "LRU":
-        subs = Algoritmo.LRU
-    elif args[3] == "FIFO":
-        subs = Algoritmo.FIFO
-    else:
-        print("Algortimo de substituição inválido.")
-        sys.exit(1)
-
-    try:
-        temp = int(args[4])
-    except ValueError:
-        print("Flag de saída deve ser 0 ou 1.")
-        sys.exit(1)
-
-    if temp == 0:
-        flag_saida = False
-    elif temp == 1:
-        flag_saida = True
-    else:
-        print("Flag de saída deve ser 0 ou 1.")
-        sys.exit(1)
-
+    nsets = 8
+    bsize = 1
+    assoc = 4
+    #subs = Algoritmo.R
+    #subs = Algoritmo.LRU
+    subs = Algoritmo.FIFO
+    flag_saida = 1
+    
     cache_val = [0] * (nsets * assoc)
     cache_tag = [0] * (nsets * assoc)
+    print(cache_val)
+    print(cache_tag)
 
-    n_bits_offset = int(math.log(bsize, 2))
-    n_bits_indice = int(math.log(nsets, 2))
 
-    # Matrizes de subtituição
+    #n_bits_offset = int(math.log(bsize, 2))
+    #n_bits_indice = int(math.log(nsets, 2))
+
+    #matriz_fifo = [[]*assoc]*nsets
     matriz_fifo = []
+    #matriz_lru = [[]*assoc]*nsets
     matriz_lru = []
+
     for i in range(nsets):
         matriz_fifo.append([])
         matriz_lru.append([])
 
+    matriz_fifo[2].append()
+    print(matriz_fifo)
+    print(matriz_lru)
+
     try:
 
-        with open(args[5], "rb") as file:
-            address_bytes = bytearray(4)
-            while True:
-                bytes_read = file.readinto(address_bytes)
-                if bytes_read == 0:
-                    break
+        #with open(args[5], "rb") as file:
+            #address_bytes = bytearray(4)
+        while True:
+                #bytes_read = file.readinto(address_bytes)
+                #if bytes_read == 0:
+                #    break
 
-                address = (address_bytes[0] << 24) | (address_bytes[1] << 16) | (address_bytes[2] << 8) | address_bytes[3]
-                tag = address >> (n_bits_offset + n_bits_indice)
-                indice = (address >> n_bits_offset) & ((2 ** n_bits_indice) - 1)
+                #address = (address_bytes[0] << 24) | (address_bytes[1] << 16) | (address_bytes[2] << 8) | address_bytes[3]
+                #tag = address >> (n_bits_offset + n_bits_indice)
+                #indice = (address >> n_bits_offset) & ((2 ** n_bits_indice) - 1)
+
+                tag = 14
+                indice = tag % assoc
 
                 if assoc == 1: # mapeamento direto
                     if cache_val[indice] == 0: # miss compulsorio
@@ -171,6 +127,7 @@ def main():
 
                         elif subs == Algoritmo.LRU:
                             idx = tag % assoc #número do conjunto
+
                             ocupacao_conjunto = len(matriz_lru[idx])
                             if(ocupacao_conjunto < assoc): #conjunto ainda não está totalmente ocupado
 
@@ -193,12 +150,16 @@ def main():
 
                         else: # subs == Algoritmo.FIFO
                             idx = tag % assoc #número do conjunto
+                            print(idx)
                             ocupacao_conjunto = len(matriz_fifo[idx])
+                            print(ocupacao_conjunto)
                             if(ocupacao_conjunto < assoc): #conjunto ainda não está totalmente ocupado
 
                                 misses_compulsorios += 1
 
                                 matriz_fifo[idx].append(tag)
+                                print(matriz_fifo[idx])
+                                print(matriz_fifo)
                                 cache_val[(idx*nsets) + ocupacao_conjunto -1] = 1
                                 cache_tag[(idx*nsets) + ocupacao_conjunto -1] = tag
 
@@ -214,6 +175,7 @@ def main():
                                 matriz_fifo[idx].append(tag)
 
                 acessos += 1
+                break
 
         if flag_saida == 1:
             print(
@@ -224,6 +186,10 @@ def main():
                 format(misses_capacidade/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + " " +
                 format(misses_conflito/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + " "
                 )
+            print(cache_val)
+            print(cache_tag)
+            print(matriz_fifo)
+            print(matriz_lru)
         else:
             print("""
 # ===================================================================================
