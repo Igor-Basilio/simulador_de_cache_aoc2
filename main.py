@@ -71,9 +71,9 @@ def main():
 
     if args[3] == "R":
         subs = Algoritmo.R
-    elif args[3] == "LRU":
+    elif args[3] == "L":
         subs = Algoritmo.LRU
-    elif args[3] == "FIFO":
+    elif args[3] == "F":
         subs = Algoritmo.FIFO
     else:
         print("Algortimo de substituição inválido.")
@@ -99,12 +99,10 @@ def main():
     n_bits_offset = int(math.log(bsize, 2))
     n_bits_indice = int(math.log(nsets, 2))
 
-    # Matrizes de subtituição
-    matriz_fifo = []
-    matriz_lru = []
+    # Matriz de subtituição
+    matriz_subs = []
     for i in range(nsets):
-        matriz_fifo.append([])
-        matriz_lru.append([])
+        matriz_subs.append([])
 
     try:
 
@@ -114,7 +112,7 @@ def main():
                 bytes_read = file.readinto(address_bytes)
                 if bytes_read == 0:
                     break
-
+    
                 address = (address_bytes[0] << 24) | (address_bytes[1] << 16) | (address_bytes[2] << 8) | address_bytes[3]
                 tag = address >> (n_bits_offset + n_bits_indice)
                 indice = (address >> n_bits_offset) & ((2 ** n_bits_indice) - 1)
@@ -144,10 +142,9 @@ def main():
                                 hits += 1
                                 hit = True
                                 if subs == Algoritmo.LRU:
-                                    idx = tag % assoc #número do conjunto
-                                    index = matriz_lru[idx].index(tag)
-                                    matriz_lru[idx].pop(index)
-                                    matriz_lru[idx].append(tag)
+                                    index = matriz_subs[indice].index(tag)
+                                    matriz_subs[indice].pop(index)
+                                    matriz_subs[indice].append(tag)
                                 break
 
                     if not hit:
@@ -159,59 +156,59 @@ def main():
                             for i in range(assoc):
                                 count += cache_val[indice + i*nsets]
 
-                            if cache_val[indice + idx * nsets] == 0:
-                                misses_compulsorios += 1
-                            elif count == assoc:
+                            if count == assoc:
                                 misses_capacidade += 1
+                                cache_tag[indice + idx * nsets] = tag
                             else:
-                                misses_conflito += 1
-
-                            cache_val[indice + idx * nsets] = 1
-                            cache_tag[indice + idx * nsets] = tag
+                                for i in range(assoc):
+                                    if cache_val[indice + i*nsets] == 0:
+                                        misses_compulsorios += 1
+                                        cache_val[indice + i * nsets] = 1
+                                        cache_tag[indice + i * nsets] = tag
+                                        break
 
                         elif subs == Algoritmo.LRU:
-                            idx = tag % assoc #número do conjunto
-                            ocupacao_conjunto = len(matriz_lru[idx])
+
+                            ocupacao_conjunto = len(matriz_subs[indice])
                             if(ocupacao_conjunto < assoc): #conjunto ainda não está totalmente ocupado
 
                                 misses_compulsorios += 1
 
-                                matriz_lru[idx].append(tag)
-                                cache_val[(idx*nsets) + ocupacao_conjunto -1] = 1
-                                cache_tag[(idx*nsets) + ocupacao_conjunto -1] = tag
-                            
+                                matriz_subs[indice].append(tag)
+                                cache_val[indice + (ocupacao_conjunto - 1) * nsets] = 1
+                                cache_tag[indice + (ocupacao_conjunto - 1) * nsets] = tag
                             else: #conjunto totalmente ocupado: precisa haver subtituição
 
                                 misses_capacidade += 1
 
-                                remover = matriz_lru[idx][0] # item a ser removido
+                                remover = matriz_subs[indice][0] # item a ser removido
                                 index = cache_tag.index(remover)
-                                
-                                cache_tag[index] = tag
-                                matriz_lru[idx].pop(0)
-                                matriz_lru[idx].append(tag)
 
-                        else: # subs == Algoritmo.FIFO
-                            idx = tag % assoc #número do conjunto
-                            ocupacao_conjunto = len(matriz_fifo[idx])
+                                cache_tag[index] = tag
+                                matriz_subs[indice].pop(0)
+                                matriz_subs[indice].append(tag)
+
+                        else: # subs == Algoritmo.FIFO                         
+
+                            ocupacao_conjunto = len(matriz_subs[indice])
                             if(ocupacao_conjunto < assoc): #conjunto ainda não está totalmente ocupado
 
                                 misses_compulsorios += 1
 
-                                matriz_fifo[idx].append(tag)
-                                cache_val[(idx*nsets) + ocupacao_conjunto -1] = 1
-                                cache_tag[(idx*nsets) + ocupacao_conjunto -1] = tag
+                                matriz_subs[indice].append(tag)
+                                cache_val[indice + (ocupacao_conjunto - 1) * nsets ] = 1
+                                cache_tag[indice + (ocupacao_conjunto - 1) * nsets ] = tag
 
                             else: #conjunto totalmente ocupado: precisa haver subtituição
 
                                 misses_capacidade += 1
 
-                                remover = matriz_fifo[idx][0] # item a ser removido
+                                remover = matriz_subs[indice][0] # item a ser removido
                                 index = cache_tag.index(remover)
                                 
                                 cache_tag[index] = tag
-                                matriz_fifo[idx].pop(0)
-                                matriz_fifo[idx].append(tag)
+                                matriz_subs[indice].pop(0)
+                                matriz_subs[indice].append(tag)
 
                 acessos += 1
 
@@ -247,11 +244,11 @@ def main():
             """)
             print(
                 "Acessos : " + str(acessos) + "\n" +
-                "Taxa de hit : " + format(hits/acessos, '.4f') + "\n" +
-                "Taxa de misses : " + format((misses_capacidade + misses_conflito + misses_compulsorios)/acessos, '.4f') + "\n" +
-                "Taxa de misses compulsorios : " + format(misses_compulsorios/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "\n" +
-                "Taxa de misses de capacidade : " + format(misses_capacidade/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "\n" +
-                "Taxa de misses de conflito : " + format(misses_conflito/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "\n"
+                "Taxa de hit : " + format(100*hits/acessos, '.4f') + "%\n" +
+                "Taxa de misses : " + format(100*(misses_capacidade + misses_conflito + misses_compulsorios)/acessos, '.4f') + "%\n" +
+                "Taxa de misses compulsorios : " + format(100*misses_compulsorios/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "%\n" +
+                "Taxa de misses de capacidade : " + format(100*misses_capacidade/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "%\n" +
+                "Taxa de misses de conflito : " + format(100*misses_conflito/(misses_capacidade + misses_conflito + misses_compulsorios), '.4f') + "%\n"
                 )
     except FileNotFoundError:
         print("Não foi possível ler o arquivo de entrada.")
